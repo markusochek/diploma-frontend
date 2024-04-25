@@ -9,15 +9,10 @@ input.onchange = async (event) => {
     if (!file) throw new Error("File not found")
     const formData = new FormData()
     formData.append("file", file)
-    await Server.POST("", formData).then((response) => {
+    formData.append("file", "fewfewef")
+    await Server.POSTFormData("", formData).then((response) => {
         console.log(response)
     })
-    // await fetch("http://localhost:3000/", {
-    //     method: "POST",
-    //     body: formData,
-    // }).then((response) => {
-    //     console.log(response)
-    // })
 }
 div.appendChild(input)
 document.body.appendChild(div)
