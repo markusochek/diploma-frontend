@@ -9,10 +9,10 @@ class Server {
         return request.json();
     }
 
-    static async POSTFormData(path, file) {
+    static async POSTFormData(path, formData) {
         let request = await fetch(this.host + `${path}`, {
             method: "POST",
-            body: file
+            body: formData
         });
         return request.json();
     }
