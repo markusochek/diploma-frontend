@@ -1,12 +1,9 @@
-import * as THREE from 'three';
-import {GLTFLoader} from "three/addons/loaders/GLTFLoader";
-
 const div = document.createElement("div");
 const input = document.createElement("input");
 input.type = "file";
 input.accept = ".pdf, .png, .jpg, .jpeg, .gif, .mp4";
 input.onchange = async (event) => {
-    const file = event.target.files[0];
+    const file = event.target["files"][0];
     if (!file) throw new Error("File not found")
     const formData = new FormData()
     formData.append("file", file)
@@ -36,8 +33,9 @@ const animate = () => {
 }
 animate();
 
-const loader = new GLTFLoader();
-loader.load('', (gltfFile) => {
+
+const loader = new THREE.GLTFLoader();
+loader.load('cup.obj', (gltfFile) => {
     scene.add(gltfFile.scene);
 });
 

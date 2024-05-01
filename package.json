@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "dependencies": {
     "express": "^4.19.2",
-    "express-fileupload": "^1.5.0",
-    "three": "^0.164.1"
+    "express-fileupload": "^1.5.0"
   }
 }
