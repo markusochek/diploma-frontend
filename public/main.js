@@ -8,54 +8,91 @@ input.onchange = async (event) => {
     const formData = new FormData()
     formData.append("file", file)
     await Server.POSTFormData("videos", formData).then((response) => {
-        console.log(response)
+        const canvas = document.createElement("canvas")
+        document.body.appendChild(canvas)
+
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        renderer.shadowMap.enabled = true;
+
+        let fov = 75;
+        const aspect = 2;
+        const near = 0.1;
+        const far = 50;
+        let camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        camera.position.x = 0;
+        camera.position.y = 15;
+        camera.position.z = 0;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffb7c5);
+
+        const skyColor = "lightblue";
+        const intensity = 1;
+
+        let light1 = new THREE.HemisphereLight(skyColor, intensity);
+        light1.position.set(-1, 2, 2);
+        scene.add(light1);
+
+        const light = new THREE.DirectionalLight(0xFFFFFF, intensity);
+        light.target.position.set(0, 0, 0);
+        light.position.set(-1, 4, 2);
+
+        light.castShadow = true;
+
+        light.shadow.mapSize.width = 512;
+        light.shadow.mapSize.height = 512;
+
+        scene.add(light.target);
+        scene.add(light);
+
+        const controls = new THREE.OrbitControls(camera, canvas);
+        controls.target.set(1, 0, -1);
+        controls.update();
+
+
+        const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(1024);
+        const cubeCamera = new THREE.CubeCamera(1, 1000, cubeRenderTarget);
+
+
+        (new THREE.GLTFLoader()).load('cup.glb', (gltfScene) => {
+            gltfScene.scene.scale.set(1, 1, 1);
+            scene.add(gltfScene.scene);
+        })
+
+        requestAnimationFrame(render);
     })
 }
+
 div.appendChild(input)
 document.body.appendChild(div)
 
-const canvas = document.createElement("canvas")
-document.body.appendChild(canvas)
-const renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-    antialias: true
-})
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.25, 20 );
-scene.add(camera)
-
-const animate = () => {
-    renderer.render(scene, camera)
-    window.requestAnimationFrame(animate)
+function resizeRendererToDisplaySize(renderer) {
+    const canvas = renderer.domElement;
+    const pixelRatio = window.devicePixelRatio;
+    const width = canvas.clientWidth * pixelRatio | 0;
+    const height = canvas.clientHeight * pixelRatio | 0;
+    const needResize = canvas.width !== width || canvas.height !== height;
+    if (needResize) {
+        renderer.setSize(width, height, false);
+    }
+    return needResize;
 }
-animate();
 
+function render(renderer, camera, cubeCamera, scene, time) {
+    time *= 0.001;
 
-const loader = new THREE.GLTFLoader();
-loader.load('cup.obj', (gltfFile) => {
-    scene.add(gltfFile.scene);
-});
+    if (resizeRendererToDisplaySize(renderer)) {
+        const canvas = renderer.domElement;
+        camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        camera.updateProjectionMatrix();
+    }
 
-// const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-// scene.add(ambientLight, directionalLight);
-//
-// const planeMaterial = new THREE.MeshStandardMaterial( { color: params.material, specular: 0x101010 } );
-// const planeGeometry = new THREE.PlaneGeometry(50, 50);
-// const planeMesh = new THREE.Mesh(planeGeometry, material);
-//
-// planeMesh.rotation.x = - Math.PI / 2;
-// planeMesh.position.y = - 0.5;
-//
-// loader.load('shoePath', (gltfFile) => {
-//
-//         const mesh = gltfFile.scene;
-//         mesh.castShadow = true;
-//
-//     });
-// planeMesh.receiveShadow = true;
-// renderer.shadowMap.enabled = true;
-// renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    cubeCamera.update(renderer, scene);
+
+    renderer.render(scene, camera);
+
+    requestAnimationFrame(render);
+}
