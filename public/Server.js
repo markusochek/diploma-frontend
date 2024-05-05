@@ -14,7 +14,7 @@ class Server {
             method: "POST",
             body: formData
         });
-        return request.json();
+        return request;
     }
 
     static async GET(path) {

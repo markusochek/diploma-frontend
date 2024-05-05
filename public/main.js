@@ -56,43 +56,28 @@ input.onchange = async (event) => {
         const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(1024);
         const cubeCamera = new THREE.CubeCamera(1, 1000, cubeRenderTarget);
 
+        console.log(response)
+        response.arrayBuffer().then(array => {
+            let blob = new Blob([array]);
+            let url = window.URL.createObjectURL(blob);
+            console.log(array)
+            console.log(blob)
+            console.log(url);
+            (new THREE.GLTFLoader()).load(url, (object) => {
+                object.scene.scale.set(1, 1, 1);
+                scene.add(object.scene);
+            })
 
-        (new THREE.GLTFLoader()).load('cup.glb', (gltfScene) => {
-            gltfScene.scene.scale.set(1, 1, 1);
-            scene.add(gltfScene.scene);
+            requestAnimationFrame(() => render(renderer, camera, cubeCamera, scene));
         })
-
-        requestAnimationFrame(render);
     })
 }
 
 div.appendChild(input)
 document.body.appendChild(div)
 
-function resizeRendererToDisplaySize(renderer) {
-    const canvas = renderer.domElement;
-    const pixelRatio = window.devicePixelRatio;
-    const width = canvas.clientWidth * pixelRatio | 0;
-    const height = canvas.clientHeight * pixelRatio | 0;
-    const needResize = canvas.width !== width || canvas.height !== height;
-    if (needResize) {
-        renderer.setSize(width, height, false);
-    }
-    return needResize;
-}
-
-function render(renderer, camera, cubeCamera, scene, time) {
-    time *= 0.001;
-
-    if (resizeRendererToDisplaySize(renderer)) {
-        const canvas = renderer.domElement;
-        camera.aspect = canvas.clientWidth / canvas.clientHeight;
-        camera.updateProjectionMatrix();
-    }
-
+function render(renderer, camera, cubeCamera, scene) {
     cubeCamera.update(renderer, scene);
-
     renderer.render(scene, camera);
-
-    requestAnimationFrame(render);
+    requestAnimationFrame(() => render(renderer, camera, cubeCamera, scene));
 }
