@@ -1,13 +1,13 @@
-const div = document.createElement("div");
-const input = document.createElement("input");
-input.type = "file";
-input.accept = ".pdf, .png, .jpg, .jpeg, .gif, .mp4";
-input.onchange = async (event) => {
-    const file = event.target["files"][0];
-    if (!file) throw new Error("File not found")
-    const formData = new FormData()
-    formData.append("file", file)
-    await Server.POSTFormData("videos", formData).then((response) => {
+// const div = document.createElement("div");
+// const input = document.createElement("input");
+// input.type = "file";
+// input.accept = ".pdf, .png, .jpg, .jpeg, .gif, .mp4";
+// input.onchange = async (event) => {
+//     const file = event.target["files"][0];
+//     if (!file) throw new Error("File not found")
+//     const formData = new FormData()
+//     formData.append("file", file)
+    // await Server.POSTFormData("videos", formData).then((response) => {
         const canvas = document.createElement("canvas")
         document.body.appendChild(canvas)
 
@@ -30,51 +30,54 @@ input.onchange = async (event) => {
         scene.background = new THREE.Color(0xffb7c5);
 
         const skyColor = "lightblue";
-        const intensity = 1;
+        const intensity = 4;
 
-        let light1 = new THREE.HemisphereLight(skyColor, intensity);
-        light1.position.set(-1, 2, 2);
+        let light1 = new THREE.AmbientLight(skyColor, intensity);
         scene.add(light1);
 
-        const light = new THREE.DirectionalLight(0xFFFFFF, intensity);
-        light.target.position.set(0, 0, 0);
-        light.position.set(-1, 4, 2);
+        const light = new THREE.HemisphereLight(0xffffbb, 0xffffbb, 3);
+        // light.target.position.set(0, 0, 0);
+        // light.position.set(5, 10, 10);
 
-        light.castShadow = true;
+        // light1.castShadow = true;
+        //
+        // light1.shadow.mapSize.width = 512;
+        // light1.shadow.mapSize.height = 512;
 
-        light.shadow.mapSize.width = 512;
-        light.shadow.mapSize.height = 512;
-
-        scene.add(light.target);
-        scene.add(light);
+        // scene.add(light.target);
+        // scene.add(light);
 
         const controls = new THREE.OrbitControls(camera, canvas);
-        controls.target.set(1, 0, -1);
+        controls.target.set(0, 0, 0);
         controls.update();
 
 
         const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(1024);
         const cubeCamera = new THREE.CubeCamera(1, 1000, cubeRenderTarget);
 
-        console.log(response)
-        response.arrayBuffer().then(array => {
-            let blob = new Blob([array]);
-            let url = window.URL.createObjectURL(blob);
-            console.log(array)
-            console.log(blob)
-            console.log(url);
-            (new THREE.GLTFLoader()).load(url, (object) => {
-                object.scene.scale.set(1, 1, 1);
-                scene.add(object.scene);
-            })
-
-            requestAnimationFrame(() => render(renderer, camera, cubeCamera, scene));
+        // response.arrayBuffer().then(array => {
+        //     let blob = new Blob([array]);
+        //     let url = window.URL.createObjectURL(blob);
+        (new THREE.GLTFLoader()).load("cat.glb", (object) => {
+                let box = new THREE.Box3().setFromObject( object.scene );
+                let center = new THREE.Vector3();
+                box.getCenter( center );
+                object.scene.position.sub( center ); // center the model
+                object.scene.rotation.y = Math.PI;   // rotate the model
+                scene.add( object.scene );
+            // object.scene.scale.set(2, 2, 2);
+            // object.scene.position.set(0, 0, 0);
+            // scene.add(object.scene);
         })
-    })
-}
 
-div.appendChild(input)
-document.body.appendChild(div)
+        requestAnimationFrame(() => render(renderer, camera, cubeCamera, scene));
+
+        // })
+    // })
+// }
+
+// div.appendChild(input)
+// document.body.appendChild(div)
 
 function render(renderer, camera, cubeCamera, scene) {
     cubeCamera.update(renderer, scene);
